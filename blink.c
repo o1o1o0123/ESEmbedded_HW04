@@ -1,6 +1,16 @@
 #include <stdint.h>
 #include "reg.h"
+void wake_up_button_init(void)
+{
+	SET_BIT(RCC_BASE + RCC_AHB1ENR_OFFSET, GPIO_EN_BIT(GPIO_PORTA));
+	//MODER button pin = 00 =>  Input (reset state)
+	CLEAR_BIT(GPIO_BASE(GPIO_PORTA) + GPIOx_MODER_OFFSET, MODERy_0_BIT(0));
+	CLEAR_BIT(GPIO_BASE(GPIO_PORTA) + GPIOx_MODER_OFFSET, MODERy_1_BIT(0));
+	//PUPDR button pin = 00 =>  No pull-up, pull-down
+	CLEAR_BIT(GPIO_BASE(GPIO_PORTA) + GPIOx_PUPDR_OFFSET, PUPDRy_0_BIT(0));
+	CLEAR_BIT(GPIO_BASE(GPIO_PORTA) + GPIOx_PUPDR_OFFSET, PUPDRy_1_BIT(0));
 
+}
 /**
  * 
  * LED init
@@ -8,6 +18,8 @@
  */
 void led_init(unsigned int led)
 {
+	
+
 	SET_BIT(RCC_BASE + RCC_AHB1ENR_OFFSET, GPIO_EN_BIT(GPIO_PORTD));
 
 	//MODER led pin = 01 => General purpose output mode
@@ -31,11 +43,21 @@ void led_init(unsigned int led)
  * blink LED forever
  * 
  */
+void wake_up_button(void)
+{
+
+	wake_up_button_init();
+        while(READ_BIT(GPIO_BASE(GPIO_PORTA) + GPIOx_IDR_OFFSET, IDRy_BIT(0))==0)
+        {}
+}
+
 void blink(unsigned int led)
 {
 	led_init(led);
-
+	
 	unsigned int i;
+
+
 
 	while (1)
 	{
@@ -64,7 +86,7 @@ void blink_count(unsigned int led, unsigned int count)
 
 	unsigned int i;
 
-	while (count--)
+	while (count)
 	{
 		//set GPIOD led pin
 		SET_BIT(GPIO_BASE(GPIO_PORTD) + GPIOx_BSRR_OFFSET, BSy_BIT(led));
